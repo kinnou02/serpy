@@ -21,7 +21,7 @@ def _compile_field_to_tuple(field, name, serializer_cls):
     name = field.label or name
 
     return (name, getter, to_value, field.call, field.required,
-            field.getter_takes_serializer)
+            field.getter_takes_serializer, field.display_none)
 
 
 class SerializerMeta(type):
@@ -102,7 +102,7 @@ class Serializer(six.with_metaclass(SerializerMeta, SerializerBase)):
 
     def _serialize(self, instance, fields):
         v = {}
-        for name, getter, to_value, call, required, pass_self in fields:
+        for name, getter, to_value, call, required, pass_self, display_none in fields:
             if pass_self:
                 result = getter(self, instance)
             else:
@@ -112,6 +112,8 @@ class Serializer(six.with_metaclass(SerializerMeta, SerializerBase)):
                         result = result()
                     if to_value:
                         result = to_value(result)
+            if not display_none and not result:
+                continue
             v[name] = result
 
         return v
